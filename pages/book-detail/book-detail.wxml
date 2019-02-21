@@ -1,0 +1,74 @@
+<!-- components/book-detail/book-detail.wxml -->
+<wxs src="../../utils/filter.wxs" module="util"></wxs>
+<!-- WXS（WeiXin Script）是小程序的一套脚本语言，结合 WXML，可以构建出页面的结构。 -->
+<view class="container">
+    <view class="head">
+        <image src="{{ book.image }}"></image>
+        <text class="title">{{ book.title }}</text>
+        <text class="author">{{ book.author }}</text>
+    </view>
+    <view class="sub-container">
+        <text class="headline">短评</text>
+        <text class="shadow" wx:if="{{ comments==false }}">目前还没有短评</text>
+        <view class="comment-container">
+            <block wx:key="" wx:for="{{ util.limit(comments , 10) }}">
+                <!-- wx:key什么也不填也可以消除警告 -->
+                <v-tag tag-class="ex-class" text="{{ item.content }}">
+                    <!-- 外部样式传入页面中 -->
+                    <text class="nums" slot="after">{{ '+' + item.nums }}</text>
+                </v-tag>
+            </block>
+        </view>
+    </view>
+    <view class="sub-container">
+        <text class="headline">内容简介</text>
+        <text class="content" decode="{{ true }}">{{ util.filter(book.summary)}}</text>
+        <!-- decode可以解析的有 &nbsp; &lt; &gt; &amp; &apos; &ensp; &emsp; -->
+    </view>
+    <view class="sub-container">
+        <text class="headline">书本信息</text>
+        <view class="detail-container">
+            <view class="vertical description">
+                <text>出版社</text>
+                <text>出版年</text>
+                <text>页数</text>
+                <text>定价</text>
+                <text>装帧</text>
+            </view>
+            <view class="vertical">
+                <text>{{ book.publisher }}</text>
+                <text>{{ book.pubdate }}</text>
+                <text>{{ book.pages }}</text>
+                <text>{{ book.price }}</text>
+                <text>{{ book.binding }}</text>
+            </view>
+        </view>
+    </view>
+</view>
+<view class="post-container" wx:if="{{ !posting }}">
+    <view bind:tap="onFakePost" class="post-fake">
+        <text>输入短评</text>
+    </view>
+    <view class="like-container">
+        <v-like bind:like="onLike" class="like" like="{{ likeStatus }}" count="{{ likeCount }}" />
+    </view>
+</view>
+<view class="posting-container" wx:if="{{ posting }}">
+    <view class="posting-header">
+        <text wx:if="{{ comments==true }}">仅可点击标签+1</text>
+        <text wx:else>暂无短评</text>
+        <text bind:tap="onCancel" class="cancel">取消</text>
+    </view>
+    <view class="comment-container">
+        <block wx:key="" wx:for="{{ util.limit(comments , 3) }}">
+            <!-- wx:key什么也不填也可以消除警告 -->
+            <v-tag bind:tapping="onPost" tag-class="ex-class" text="{{ item.content }}">
+                <!-- 外部样式传入页面中 -->
+                <text class="nums" slot="after">{{ '+' + item.nums }}</text>
+            </v-tag>
+        </block>
+    </view>
+    <input bind:confirm="onPost" type="text" class="posting-text" placeholder="最多可输入12字"></input>
+    <!-- 点击完成按钮时触发 -->
+</view>
+<v-mask wx:if="{{ posting }}" />

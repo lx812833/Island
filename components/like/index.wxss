@@ -1,0 +1,22 @@
+/* components/like/index.wxss */
+
+.container {
+  display: inline-flex; /*组件宽度自适应，使组件通用性更好*/
+  flex-direction: row;
+  padding: 10rpx;
+}
+
+.container image {
+  /*iPhone6机型下 1rpx : 1px = 2 : 1 */
+  width: 32rpx;
+  height: 28rpx;
+}
+
+.container  text {
+  position: relative;
+  bottom: 10rpx;
+  left: 6rpx;
+  font-size: 24rpx;
+  line-height: 24rpx;
+  color: #bbbbbb;
+}

@@ -1,0 +1,15 @@
+var filter = function (text) {
+    // 服务器返回的是 \\n , 需要将 \\n 用转义字符  \ 转义为  \n , 每个 \ 要一个  \ 转义，所以要四个
+    if (!text) {
+        return
+    }
+    var reg = getRegExp('\\\\n', 'g')
+    return text.replace(reg, '\n&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;')
+}
+var limit = function (array, length) {
+    return array.splice(0, length)
+}
+module.exports = {
+    filter: filter,
+    limit: limit
+}

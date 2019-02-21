@@ -1,0 +1,8 @@
+/**app.wxss**/
+
+/* 设置全局样式*/
+
+page {
+  font-family: PingFangSC-Thin;
+  font-size: 16px;
+}

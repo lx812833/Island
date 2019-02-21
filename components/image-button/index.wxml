@@ -1,0 +1,5 @@
+<!-- components/image-button/index.wxml -->
+<button open-type="{{ openType }}" bindgetuserinfo="onGetUserInfo" plain="{{true}}" class="container">
+    <!-- plain 按钮是否镂空，是否透明 -->
+    <slot name="img"></slot>
+</button>

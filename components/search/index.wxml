@@ -1,0 +1,48 @@
+<!-- components/search/index.wxml -->
+<view class="container">
+    <view class="header">
+        <view class="search-container">
+            <image class="icon" src="./image/search.png" alt="" />
+            <input value="{{ q }}" bind:confirm="onConfirm" class="bar" type="text" placeholder-class="in-bar" placeholder="书籍名" focus="{{true}}" />
+            <!-- 动态绑定input输入文本 -->
+            <!-- focus="{{true}}" 自动聚焦，拉起键盘 -->
+            <image bind:tap="onDelete" class="cancel-img" src="./image/cancel.png" alt="" />
+        </view>
+        <view class="cancel" bind:tap="onCancel">取消</view>
+    </view>
+    <view wx:if="{{ !searching }}">
+        <view class="history">
+            <view class="title">
+                <view class="chunk"></view>
+                <text>历史搜索</text>
+            </view>
+            <view class="tags">
+                <block wx:for="{{ historyWords }}" wx:key="">
+                    <v-tag bind:tapping="onConfirm" text="{{ item }}" />
+                    <!-- tapping事件已在v-tag组件定义 -->
+                </block>
+            </view>
+        </view>
+        <view class="history hot-search">
+            <view class="title">
+                <view class="chunk"></view>
+                <text>热门搜索</text>
+            </view>
+            <view class="tags">
+                <block wx:for="{{ hotWords }}" wx:key="">
+                    <v-tag bind:tapping="onConfirm" text="{{ item }}" />
+                </block>
+            </view>
+        </view>
+    </view>
+    <view class="books-container" wx:if="{{ searching}}">
+        <block wx:for="{{ dataArray }}" wx:key="{{ item.id }}">
+            <v-book book="{{ item }}" class="book-cmp" />
+        </block>
+    </view>
+    <v-loading class="loading-center" wx:if="{{ loadingCenter }}" />
+    <!-- 首页加载动画 -->
+    <v-loading class="loading" wx:if="{{ loading }}" />
+    <!-- 加载更多动画 -->
+    <text wx:if="{{ noneRoust }}" class="empty-tip">暂无搜索结果</text>
+</view>
