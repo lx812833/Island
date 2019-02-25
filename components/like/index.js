@@ -40,7 +40,7 @@ Component({
       })
       //激活
       let behavior = this.properties.like ? 'like' : 'cancel'
-      this.triggerEvent('like', { //自定义事件名称 
+      this.triggerEvent('like', { //自定义事件名称  bind:like="onLike"
         behavior: behavior //自定义属性
       }, {}) // 看文档
     }
