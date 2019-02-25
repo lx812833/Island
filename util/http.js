@@ -3,7 +3,7 @@ import {
 } from '../config.js'
 
 const tips = {
-  1: '默认提示信息',
+  1: '抱歉，出现了一个错误',
   1005: '无效的开发者key',
   3000: '暂无新期刊'
 }
@@ -25,6 +25,15 @@ class HTTP { //ES6 定义一个HTTP类
         let code = res.statusCode.toString() //开发者服务器返回的 HTTP 状态码
         if (code.startsWith('2')) { // 表示参数字符串是否在源字符串的头部
           params.success && params.success(res.data)
+          /**
+           *  params.success && params.success(res.data)
+           *  判断params.success是否为空
+           *  当不为空时执行params.success回调函数
+           *  等同于
+           *  if(params.success) {
+           *    params.success(res.data)
+           *  }
+           */
         } else {
           let error_code = res.data.error_code
           this._show_error(error_code)
@@ -35,7 +44,8 @@ class HTTP { //ES6 定义一个HTTP类
       }
     })
   }
-  _show_error(error_code) { //下划线代表自定义私有方法
+  //下划线代表自定义私有方法
+  _show_error(error_code) { 
     if (!error_code) {
       error_code = 1
     }
