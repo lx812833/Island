@@ -4,6 +4,7 @@
         <v-epsoide class="epsoide" index="{{ classic.index }}" />
         <view class="like-container">
             <v-like class="like" bind:like="onLike" like="{{ likeStatus }}" count="{{ likeCount }}" />
+            <!-- 组件like prototypes里的对外属性 -->
             <v-button open-type="share" class="share-btn">
                 <image class="share" src="/images/icon/share.png" slot="img"></image>
             </v-button>

@@ -57,7 +57,7 @@ Page({
   //自定义函数，判断是否点赞
   onLike: function (event) {
     console.log(event)
-    let behavior = event.detail.behavior
+    let behavior = event.detail.behavior // 获取behavior状态
     likeModel.like(behavior, this.data.classic.id, this.data.classic.type)
   },
   onNext: function (event) {
