@@ -1,3 +1,11 @@
+---
+title: 小程序组件化
+date: 2019-02-24 21:37:43
+tags: "项目"
+categories: "项目"
+---
+
+
 ### 小程序组件化实践
 
 小程序组件化实践是学习[慕课网七月老师](https://coding.imooc.com/class/251.html)所记录，主要是迎合小程序组件化开发的趋势，该项目主要技术栈为**小程序、Es6**
@@ -195,27 +203,184 @@ attached: function () {
 }
 ```
 
+此外，还需注意的是，由于函数作用域发生了改变，在异步回调函数`success`里想要获取`data`中的`test`的值，是不可能访问到`this`的，`this`指代不明确，此时访问会报错。
+如：
 
+```python
+success: function(res) {
+    console.log(this.data.test)   // 报错
+}
+```
 
-1、由于函数作用域发生了改变，success回调函数内不可访问到this,this指代不明确
-    如 success: function(res) {
-        console.log(this.data.test)  // 出错
+- 传统方法里，在回调函数内重新定义`this` **`let _this = this`** ，让`this`指向`_this`
+- 使用 **`Es6箭头函数`**
+
+  ```python
+  success: (res) {
+      console.log(this.data.test) // 正确
+  }
+  ```
+
+### 3、小程序网络请求的封装
+
+#### 3.1、config 配置
+
+在小程序根目录下定义 **`config.js`** 文件，里面配置小程序网络请求前缀，这样，如果以后请求前缀发生了更改，只需在`config`里重新修改即可。
+
+```python
+const config = {
+    api_blink_url: 'http://bl.7yue.pro/v1/',
+    appkey: 'AbhC31IG7ruCDp57'
+}
+export {
+    config
+} //输出暴露config
+```
+
+#### 3.2、封装网络请求 https
+
+在 **`util/http.js`** 中封装网络请求 **`https`**，小程序中所有的网络请求都写在这里，如果页面需要用到网络请求，就需要`import`这个`https`，这样维护代码的时候更加方便。
+
+- 使用 **`Es6 class`** 定义 `HTTP`类，在封装一个`request`实例方法
+
+```python
+//ES6 定义一个HTTP类
+class HTTP {
+    request(params) {   // request 实例方法(函数)
+    if (!params.method) {
+        params.method = "GET"
     }
+    wx.request({
+        url: config.api_blink_url + params.url,
+        data: params.data,
+        header: {
+            'content-type': 'application/json',
+            'appkey': config.appkey
+        },
+        success: (res) => {
+            //开发者服务器返回的 HTTP 状态码
+            // 判断以2（2xx)开头的状态码为正确
+            let code = res.statusCode.toString()
+            if (code.startsWith('2')) {
+                // 表示参数字符串是否在源字符串的头部
+                params.success && params.success(res.data)
+            }
+            else {
+                let error_code = res.data.error_code
+                this._show_error(error_code)
+            }
+        },
+        fail: (err) => {
+            this._show_error(1)
+        }
+    })
+}
+```
 
-  （1）传统方法里，在回调函数外重新定义this  let _this = this
-  （2）使用Es6箭头函数
-     
-       success: (res) => {
-           console.log(this.data.test)  // 正确调用
-       }
+小程序 **`request`** 需要包含 url、data、header、method、success、fail 等。这里封装的网络请求 **`https`** 中为优化 method，在 request 之前就先进行判断。
 
-2、配置config及暴露
+```python
+if (!params.method) {
+    params.method = "GET"
+}
+```
 
-3、Es6模块导入导出 import时只能使用相对路径
+这里运用 Es6 新特性**函数默认参数**进行判断，如果`request`请求中没有携带`method`，则`method`定义为`GET`；如果携带了，`method`就以携带值为准。
 
-4、封装https utils/httpjs
-    1、使用Es6 class 定义HTTP类，在封装一个request实例方法
-    2、Es6 if (code.startsWith('2')) { // 表示参数字符串是否在源字符串的头部
-    3、定义错误码
+- 以 **`str.startWith()` 判断参数字符串是否在原字符串的头部**来判断服务器返回的`HTTP`状态码是否是以‘2’开头的，如果是就执行参数`params`下的`success`异步回调函数。
 
+```python
+if (code.startsWith('2')) {  //表示参数字符串是否在源字符串的头部
+    params.success && params.success(res.data)
+} else {
+    let error_code = res.data.error_code
+    this._show_error(error_code)
+}
+```
 
+- 自定义状态码
+
+一个谨慎严谨的自定义状态码能严谨的提示相关提示信息
+
+```python
+const tips = {
+    1: '默认提示信息',
+    1005: '无效的开发者key',
+    3000: '暂无新期刊'
+}
+```
+
+这里使用自定义私有方法定义弹窗
+
+```python
+_show_error(error_code) { //下划线代表自定义私有方法
+    if (!error_code) {
+        error_code = 1
+    }
+    wx.showToast({
+        title: tips[error_code],
+        icon: 'none',
+        duration: 2000
+    })
+}
+```
+
+这里获取网络请求的异步回调用的是 **`callBack回调函数`** 。封装的每一层都要传入 callBack 回调函数中去，而如果用 **`promise`** 的方式的话，是不用层层传入的，只要一直`return`到上一层，直到在`page`页面需要回调结果了，再获取这个`promise`对象，再通过`promise`对象的`then`方法获取网络请求的结果。
+
+例如在`modules/classic.js`中：
+
+```python
+import {HTTP} from '../util/http.js'
+
+class ClassicModel extends HTTP {
+    getLatest(sCallBack) {
+        this.request({
+            url: 'classic/latest',
+            success: (res) => {
+                sCallBack(res)
+                this._setLatestIndex(res.index)  // 缓存的写入
+                let key = this._getKey(res.index)
+                wx.setStorageSync(key, res)
+            }
+        })
+    }
+}
+```
+
+在`pages/classic/classic.js`中引入使用`ClassicModel`
+
+```python
+import {ClassicModel} from '../../modules/classic.js'
+
+// 进行实例化
+let classicModel = new ClassicModel() //实例化
+```
+
+通过 **`new Model`** 实例化后使用
+
+```python
+classicModel.getLatest((res) => {
+    console.log(res)  //获取的数据
+    this.setData({
+        classic: res, // 数据绑定
+        // ...res 扩展字符串 引用时去掉classic
+        likeStatus: res.like_status,  //页面初始化时数据渲染                   
+        likeCount: res.fav_nums
+    })
+})
+```
+
+1、model概念
+2、电影诗句自适应居中 max-width: 550rpx;
+3、组件的粒度
+4、 params.success && params.success(res.data)
+    /**
+    *  params.success && params.success(res.data)
+    *  判断params.success是否为空
+    *  当不为空时执行params.success回调函数
+    *  等同于
+    *  if(params.success) {
+    *    params.success(res.data)
+    *  }
+    */
+5、this.setdata 与 this.data
