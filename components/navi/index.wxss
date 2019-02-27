@@ -1,16 +1,16 @@
 /* components/navi/navi.wxss */
 .container {
+    display: inline-flex;
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
     width: 600rpx;
     height: 80rpx;
     background-color: #f7f7f7;
     border-radius: 2px;
-    display: inline-flex;
-    flex-direction: row;
-    justify-content: space-between;
-    align-items: center
 }
 
- .icon { /* 移动端要注意放大点击按钮的可控区域 */
+.icon { /* 移动端要注意放大点击按钮的可控区域 */
     height: 88rpx;
     width: 80rpx
 }

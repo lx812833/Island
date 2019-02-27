@@ -1,13 +1,16 @@
 import {
   HTTP
 } from '../util/http.js'
+
+// 继承HTTP类
 class ClassicModel extends HTTP {
   getLatest(sCallBack) {
     this.request({
       url: 'classic/latest',
       success: (res) => {
         sCallBack(res)
-        this._setLatestIndex(res.index) // 缓存的写入
+        this._setLatestIndex(res.index) 
+        // 缓存的写入
         let key = this._getKey(res.index)
         wx.setStorageSync(key, res)
       }
@@ -32,9 +35,11 @@ class ClassicModel extends HTTP {
       sCallBack(classic)
     }
   }
+  // 当前期刊是否是第一个
   isFirst(index) {
     return index == 1 ? true : false
   }
+  // 当前期刊是否是最新的
   isLatest(index) { //传入的index
     let latestIndex = this._getLatestIndex()
     return latestIndex == index ? true : false //判断latestIndex是否等于传入的index
@@ -48,7 +53,7 @@ class ClassicModel extends HTTP {
     let index = wx.getStorageSync('latest')
     return index
   }
-  //第一步：获取(设置)key
+  //第一步：获取(设置)key （期刊序号）
   _getKey(index) { //私有方法(以下划线开始)
     let key = 'classic-' + index
     return key

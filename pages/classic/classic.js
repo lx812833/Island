@@ -25,7 +25,7 @@ Page({
    */
   onLoad: function (options) {
     classicModel.getLatest((res) => {
-      console.log(res) //获取的数据
+      console.log('class获取的数据', res) //获取的数据
       this.setData({
         classic: res, // 数据绑定
         // ...res  扩展字符串 引用时去掉classic
@@ -133,6 +133,6 @@ Page({
    * 用户点击右上角分享
    */
   onShareAppMessage: function () {
-
+    console.log('点击分享')
   }
 })

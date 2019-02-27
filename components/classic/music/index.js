@@ -13,6 +13,7 @@ Component({
    * 覆盖准则：
    * 如果有同名的属性或方法，组件本身的属性或方法会覆盖 behavior 中的属性或方法，
    * 如果引用了多个 behavior ，在定义段中靠后 behavior 中的属性或方法会覆盖靠前的属性或方法；
+   * 当properties 与 behavior 出现同名属性时，properties会覆盖behavior中的属性
    */
   properties: { //外部属性
     // img: String,

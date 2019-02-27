@@ -412,3 +412,9 @@ classicModel.getLatest((res) => {
 4、3种封装（电影，音乐，句子）
    behavior组件复用
    classic-beh.js
+
+5、onNext与onPrevious公共函数的提取、  getClassic(index, nextOrprevious, sCallBack) 
+
+6、setStorageSync 同步缓存、缓存机制(十分重要)
+
+7、单独获取点赞数据信息，由于classic已存入缓存中去，当从缓存中获取点赞数据时，由于缓存机制的影响，再次点赞会出错，所以需额外调用点赞接口.

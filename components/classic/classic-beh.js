@@ -8,7 +8,7 @@ let classicBeh = Behavior({
     properties: { //外部属性
         img: String,
         content: String,
-        hidden: Boolean
+        hidden: Boolean // 组件隐藏显示
     },
     data: {
 
