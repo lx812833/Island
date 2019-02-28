@@ -372,7 +372,7 @@ classicModel.getLatest((res) => {
     console.log(res)                  // 获取的数据
     this.setData({
         classic: res,                 // 数据绑定
-        likeStatus: res.like_status,  // 页面初始化时数据渲染                   
+        likeStatus: res.like_status,  // 页面初始化时数据渲染
         likeCount: res.fav_nums
     })
 })
@@ -392,29 +392,80 @@ classicModel.getLatest((res) => {
 
 - 单次设置的数据不能超多 1024KB
 
+### 4、导航栏 navi 组件相关要点
 
-导航栏navi组件
+#### 4.1、导航栏 navi 组件注意要点
 
-1、导航（需判断是否是最先/后一张）
-2、用户体验（触屏区域）
-    .icon { /* 移动端要注意放大点击按钮的可控区域 */
-        height: 88rpx;
-        width: 80rpx
-    }
+- 通过导航栏 `navi` 组件操控 `classic` 页面电影/文章/句子组件时需要通过 `triggerEvent` 操作，还需要判断是否是最先/后一张
 
-3、onLeft: function (event) {
-      if (!this.properties.latest) { /* 判断是否是第一期，是，则禁用 */
+```python
+onLeft: function (event) {
+    if (!this.properties.latest) {   /* 判断是否是第一期，是，则禁用 */
         this.triggerEvent('left', {}, {})
-      }
+    }
+}
+```
 
+- 移动端点击触发事件时，需要把放大触发区域。
+
+#### 4.2、behavior 组件复用
+
+在 `component`下新建文件件 `classic` ,其中又包含三组件： `music`组件、`movies`组件、`essay`组件。其中，三者 `properties` 中基本一致，所以可以使用 `behaviors` 经行组件间代码共享。
+
+**`behaviors`** 是用于组件间**代码共享**的特性，类似于一些编程语言中的“`mixins`”或“`traits`”。每个 `behavior` 可以包含一组`属性`、`数据`、`生命周期函数`和`方法`，组件引用它时，它的属性、数据和方法会被合并到组件中，生命周期函数也会在对应时机被调用。每个组件可以引用**多个 behavior** 。 `behavior` 也可以引用其他 `behavior` 。
+
+在新建的 `components/classic/classic-beh.js` 中：
+
+**`behavior 需要使用 Behavior() 构造器定义。`**
+
+```python
+let classicBeh = Behavior({
+    properties: {          //外部属性
+        img: String,
+        content: String,
+        hidden: Boolean    // 组件隐藏显示
     },
+    data: {},
+    methods: {}
+})
 
-4、3种封装（电影，音乐，句子）
-   behavior组件复用
-   classic-beh.js
+export { classicBeh }
+```
 
-5、onNext与onPrevious公共函数的提取、  getClassic(index, nextOrprevious, sCallBack) 
+**覆盖准则**：
 
-6、setStorageSync 同步缓存、缓存机制(十分重要)
+- 如果有同名的属性或方法，组件本身的属性或方法会覆盖  `behavior`  中的属性或方法，如果引用了多个  `behavior` ，在定义段中靠后  `behavior`  中的属性或方法会覆盖靠前的属性或方法；
 
-7、单独获取点赞数据信息，由于classic已存入缓存中去，当从缓存中获取点赞数据时，由于缓存机制的影响，再次点赞会出错，所以需额外调用点赞接口。
+- 如果有同名的数据字段，如果数据是对象类型，会进行对象合并，如果是非对象类型则会进行相互覆盖；
+
+- 生命周期函数不会相互覆盖，而是在对应触发时机被逐个调用。如果同一个  behavior  被一个组件多次引用，它定义的生命周期函数只会被执行一次。
+
+在使用时需引用:
+
+```python
+// 引用
+import { classicBeh } from "../classic-beh";
+
+// 使用
+behaviors: [classicBeh]
+```
+
+#### 4.3、组件间 wxss 样式复用
+
+在组件 `classic` 文件夹里新建一个`common.wxss`，可以提取 `music` 组件、`movies` 组件、`essay` 组件里公共的样式写在这里。
+
+引用时需要使用 **`@import`** 调用
+
+```python
+@import "../common.wxss"
+```
+
+
+
+
+1、hidden对组件显示与否作用（wx-if 要求频繁切换）
+2、缓存机制
+3、背景音频播放管理  wx.getBackgroundAudioManager()
+4、间接通信 navi组件 => classic页面 => music组件
+   detached hidden不能触发detach函数
+   <v-music wx:if="{{ classic.type == 200 }}" img="{{ classic.image }}" content="{{ classic.content }}" src="{{ classic.url }}" />
