@@ -469,3 +469,35 @@ behaviors: [classicBeh]
 4、间接通信 navi组件 => classic页面 => music组件
    detached hidden不能触发detach函数
    <v-music wx:if="{{ classic.type == 200 }}" img="{{ classic.image }}" content="{{ classic.content }}" src="{{ classic.url }}" />
+
+
+5、promise是对象，可以保存状态
+
+const promise = new Promise((resolve, reject) => {
+    wx.wx.getSystemInfo({
+        success: (res) => {
+            resolve(res)
+        },
+        fail: (err) => {
+            reject(err)
+        },
+        complete: () => {}
+    });
+})
+
+promise.then((res)=>{
+    console.log(res)
+},(error)=>{
+    console.log(error)
+})
+
+promise重构
+
+request方法返回一个promise
+以前的request(params) 中params是个js对象，由于JavaScript对象特效，其他参数是可以附加在params对象上，但是别人不知道需要传什么参数，所以需要明确函数参数
+
+request({url, data = {}, method = 'GET' })
+
+还有一种好处： 可以指定参数默认值，如data = {}, method = 'GET'
+
+必填参数必须在默认参数之前：_request(url, resolve, reject, data = {}, method = 'GET')
