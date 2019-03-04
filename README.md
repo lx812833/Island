@@ -501,3 +501,17 @@ request({url, data = {}, method = 'GET' })
 还有一种好处： 可以指定参数默认值，如data = {}, method = 'GET'
 
 必填参数必须在默认参数之前：_request(url, resolve, reject, data = {}, method = 'GET')
+
+如： getHotList() {
+        return this.request({
+            url: 'book/hot_list'
+        })
+    }
+
+    booksModel.getHotList().then(res => {
+      console.log("这是获取的书籍信息")
+      console.log(res)
+      this.setData({
+        books: res
+      })
+    })
