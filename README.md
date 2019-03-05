@@ -460,20 +460,42 @@ behaviors: [classicBeh]
 @import "../common.wxss"
 ```
 
+#### 4.4、wx：if 与 hidden 区别
 
+在 `classic` 页面中，由于 `music` 组件、`movies` 组件、`essay` 组件都占用页面同一面区域，所以在通过导航栏 navi 组件切换显示时，需要控制这三组件显示与否。
 
+`wx:if`  与  `hidden`  都可以控制微信小程序中元素的显示与否。
 
-1、hidden对组件显示与否作用（wx-if 要求频繁切换）
-2、缓存机制
-3、背景音频播放管理  wx.getBackgroundAudioManager()
-4、间接通信 navi组件 => classic页面 => music组件
-   detached hidden不能触发detach函数
-   <v-music wx:if="{{ classic.type == 200 }}" img="{{ classic.image }}" content="{{ classic.content }}" src="{{ classic.url }}" />
+区别：
 
+- `wx:if`  是一个控制属性，需要将它添加到一个标签上。如果要一次性判断多个组件标签，可以使用一个  `<block>`  标签将多个组件包装起来，并在上边使用  `wx:if`  控制属性。
 
-5、promise是对象，可以保存状态
+- `wx:if`  是遇 `true`  显示，`hidden`  是遇 `false`  显示。
 
-const promise = new Promise((resolve, reject) => {
+- `wx:if`  在隐藏的时候不渲染，而 `hidden`  在隐藏时仍然渲染，只是不呈现。
+
+- 所以如果**频繁切换**的话，用 `wx:if`  将会消耗更多资源，因为每次呈现的时候他都会渲染，每次隐藏的时候，他都会销毁。用 `hidden` 相对来说要好点。
+
+- 如果切换并不频繁的话，用 `wx:if`  相对来说较好些，因为它会避免初始就一下渲染那么多。
+
+```python
+<v-movie hidden="{{ classic.type != 100 }}" img="{{ classic.image }}" content="{{ classic.content }}" />
+<v-music hidden="{{ classic.type != 200 }}" img="{{ classic.image }}" content="{{ classic.content }}" src="{{ classic.url }}" />
+<v-essay hidden="{{ classic.type != 300 }}" img="{{ classic.image }}" content="{{ classic.content }}" />
+```
+
+### 5、使用 Promise 重构网络请求
+
+#### 5.1、promise 重构网络请求
+
+在第 3 章节中，已经封装过小程序的`https`网络请求，现在以此为基础，使用`promise`重新封装。首先，要明白为什么要引入`promise`进行封装呢？在第 3 章中获取网络请求的异步回调结果用的是`callbck`函数的方式。这样其实有一个很不好的现象，就是封装的每一层都要传入`callback`回调函数，而如果用`promise`的方式的话，是不用层层传入的，只要一直`return`到上一层，直到在`page`页面你需要回调结果了，再获取这个`promise`对象，再通过`promise`对象的`then`方法获取网络请求的结果。
+
+况且 **函数是不能保存状态的，而对象是能保存状态的，callcack 是个回调函数，promise 是个对象，所以 callback 方式需要层层传递，而 promise 方式不需要。**
+
+promise 在小程序的使用：
+
+```python
+const promise = new Promise((resolve, reject) => {              
     wx.wx.getSystemInfo({
         success: (res) => {
             resolve(res)
@@ -487,31 +509,70 @@ const promise = new Promise((resolve, reject) => {
 
 promise.then((res)=>{
     console.log(res)
-},(error)=>{
+    },(error)=>{
     console.log(error)
 })
+```
 
-promise重构
+`request`方法返回一个`promise` 以前的`request(params)` 中`params`是个`js`对象，由于 JavaScript 对象特性，其他参数是可以附加在`params`对象上，但是别人不知道需要传什么参数，所以需要明确函数参数。
 
-request方法返回一个promise
-以前的request(params) 中params是个js对象，由于JavaScript对象特效，其他参数是可以附加在params对象上，但是别人不知道需要传什么参数，所以需要明确函数参数
+```python
+request({url, data = {}, method = 'GET' }) {
+    return new Promise((resolve, reject) => {
+        this._request(url, resolve, reject, data, method)
+    })
+}
+```
 
-request({url, data = {}, method = 'GET' })
+还有一种好处是： 可以指定**参数默认值**，如`data = {}`, `method = 'GET'`。且必填参数必须在默认参数之前：
 
-还有一种好处： 可以指定参数默认值，如data = {}, method = 'GET'
+```python
+_request(url, resolve, reject, data = {}, method = 'GET')
+```
 
-必填参数必须在默认参数之前：_request(url, resolve, reject, data = {}, method = 'GET')
+在`modules/books.js`中引入使用
 
-如： getHotList() {
+```python
+class BooksModel extends HTTP {
+    getHotList() {
         return this.request({
             url: 'book/hot_list'
         })
     }
+}
+```
 
-    booksModel.getHotList().then(res => {
-      console.log("这是获取的书籍信息")
-      console.log(res)
-      this.setData({
-        books: res
-      })
+在具体页面中使用:
+
+```python
+booksModel.getHotList().then(res => {
+  console.log("这是获取的书籍信息")
+  console.log(res)
+  this.setData({
+    books: res
+  })
+})
+```
+
+#### 5.2、promise 解决回调地狱
+
+比如现在有多个网络请求，这几个网络请求是存在**链式关系**的，就是必须第一个网络请求完成后才能进行第二个、再第三个、第四个。。。。，如果用`callback`的形式进行封装，会出现如下图的结果：
+
+![回调地狱图示](https://upload-images.jianshu.io/upload_images/12474664-abe10a27913d3709.png?imageMogr2/auto-orient/)
+
+此时可以用`promise`进行网络请求：
+
+```python
+API1.getResult(res)
+    .then(res => {
+        return API2.getResult(res);
     })
+    .then(res => {
+        return API3.getResult(res);
+    })
+    .then(res => {
+        console.log(res);
+    });
+```
+
+这样每个网络请求是平行的，所以解决了回调地狱的问题。
